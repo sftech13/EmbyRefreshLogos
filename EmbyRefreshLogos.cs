@@ -177,10 +177,4 @@ namespace EmbyRefreshLogos
             }
         }
     }
-    
-    public class m3uInfo
-    {
-        public string channelName { get; set; }
-        public string logoUrl { get; set; }
-    }
 }

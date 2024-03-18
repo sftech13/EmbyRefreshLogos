@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace EmbyRefreshLogos
 {
-    // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
+    public class m3uInfo
+    {      
+        public string channelName { get; set; }
+        public string logoUrl { get; set; }
+    }
+
     public class ImageTags
     {
         public string Primary { get; set; }
