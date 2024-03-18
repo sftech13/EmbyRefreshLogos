@@ -3,15 +3,15 @@ dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true /p:IncludeNativeL
 dotnet publish -r linux-arm -c Release /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --self-contained
 dotnet publish -r linux-x64 -c Release /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --self-contained
 
-cd \Stuff\Repos\FotMobXmltv\Build
-copy /Y "C:\Stuff\Repos\FotMobXmltv\bin\Release\net8.0\win-x64\publish\FotMobXmltv.exe" .
-"C:\Program Files\7-Zip\7z" a -tzip FotMobXmltv-WIN.zip FotMobXmltv.exe FotMobXmltv_sample.dat FotMobXmltv.pdf
+cd \Stuff\Repos\EmbyRefreshLogos\Build
+copy /Y "C:\Stuff\Repos\EmbyRefreshLogos\bin\Release\net8.0\win-x64\publish\EmbyRefreshLogos.exe" .
+"C:\Program Files\7-Zip\7z" a -tzip EmbyRefreshLogos-WIN.zip EmbyRefreshLogos.exe
 
-copy /Y "C:\Stuff\Repos\FotMobXmltv\bin\Release\net8.0\linux-arm\publish\FotMobXmltv" .
-"C:\Program Files\7-Zip\7z" a -t7z FotMobXmltv-RasPi.7z FotMobXmltv FotMobXmltv_sample.dat FotMobXmltv.pdf
+copy /Y "C:\Stuff\Repos\EmbyRefreshLogos\bin\Release\net8.0\linux-arm\publish\EmbyRefreshLogos" .
+"C:\Program Files\7-Zip\7z" a -t7z EmbyRefreshLogos-RasPi.7z EmbyRefreshLogos
 
-copy /Y "C:\Stuff\Repos\FotMobXmltv\bin\Release\net8.0\osx-x64\publish\FotMobXmltv" .
-"C:\Program Files\7-Zip\7z" a -t7z FotMobXmltv-OSX.7z FotMobXmltv FotMobXmltv_sample.dat FotMobXmltv.pdf
+copy /Y "C:\Stuff\Repos\EmbyRefreshLogos\bin\Release\net8.0\osx-x64\publish\EmbyRefreshLogos" .
+"C:\Program Files\7-Zip\7z" a -t7z EmbyRefreshLogos-OSX.7z EmbyRefreshLogos
 
-copy /Y "C:\Stuff\Repos\FotMobXmltv\bin\Release\net8.0\linux-x64\publish\FotMobXmltv" .
-"C:\Program Files\7-Zip\7z" a -t7z FotMobXmltv-LIN64.7z FotMobXmltv FotMobXmltv_sample.dat FotMobXmltv.pdf
+copy /Y "C:\Stuff\Repos\EmbyRefreshLogos\bin\Release\net8.0\linux-x64\publish\EmbyRefreshLogos" .
+"C:\Program Files\7-Zip\7z" a -t7z EmbyRefreshLogos-LIN64.7z EmbyRefreshLogos
