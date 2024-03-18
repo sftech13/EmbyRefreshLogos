@@ -8,7 +8,7 @@ namespace EmbyRefreshLogos
 {
     public class EmbyRefreshLogos
     {
-        private const string format1 = "http://{0}:{1}/emby/LiveTv/Manage/Channels&api_key={2}";
+        private const string format = "http://{0}:{1}/emby/LiveTv/Manage/Channels&api_key={2}";
         private string agent = "EmbyRefreshLogos";
 
         private Dictionary<string, string> channelData = new Dictionary<string, string>();
@@ -47,7 +47,9 @@ namespace EmbyRefreshLogos
                 ConsoleWithLog("To get Emby api key go to dashboard>advanced>security and generate one");
                 return;
             }
-            
+
+            ConsoleWithLog($"Reading m3u file {m3u}.");
+
             if (!File.Exists(m3u))
             {
                 ConsoleWithLog($"Specified m3u file {m3u} not found.");
@@ -62,12 +64,12 @@ namespace EmbyRefreshLogos
             }
             catch (Exception ex)
             {
-                ConsoleWithLog("Problem trying to read the m3u file. ");
+                ConsoleWithLog($"Problem trying to read the m3u file {m3u}.");
                 ConsoleWithLog($"Exception: {ex.Message}");
                 return;
             }
 
-            string uriName = string.Format(format1, host, port, key);
+            string uriName = string.Format(format, host, port, key);
 
             try
             {
@@ -127,6 +129,10 @@ namespace EmbyRefreshLogos
             ConsoleWithLog($"EmbyRefreshLogos Complete. Number of logos set: {count}.");
         }
 
+        /// <summary>
+        /// Read m3u file and store channel name and logo url in dictionary
+        /// </summary>
+        /// <param name="fileName"></param>
         private void ReadM3u(string fileName)
         {
             try
@@ -148,6 +154,10 @@ namespace EmbyRefreshLogos
             }
         }
 
+        /// <summary>
+        /// Writes to console and log file
+        /// </summary>
+        /// <param name="text"></param>
         public static void ConsoleWithLog(string text)
         {
             Console.WriteLine(text);
