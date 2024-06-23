@@ -26,6 +26,13 @@ namespace EmbyRefreshLogos
             ConsoleWithLog($"EmbyRefreshLogos version {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}");
             ConsoleWithLog("");
 
+            if (args.Length < 2)
+            {
+                ConsoleWithLog("EmbyRefreshLogos m3uPath API_KEY {server} {port}");
+                ConsoleWithLog("To get Emby api key go to dashboard>advanced>security and generate one");
+                return;
+            }
+
             int count = 0;
             string m3u = args[0];
             string host = "localhost";
@@ -102,15 +109,14 @@ namespace EmbyRefreshLogos
                         string id = item.Id;
                         bool found = channelData.TryGetValue(item.Name, out string? logoUrl);
 
-                        if (found)
+                        if (found && !string.IsNullOrEmpty(logoUrl))
                         {
-
                             RestRequest restRequest2 = new RestRequest($"emby/Items/{id}/Images/Primary/0/Url?Url={logoUrl}&api_key={key}", Method.Post);
                             restRequest2.AddHeader("user-agent", agent);
                             var restResponse2 = restClient.Execute(restRequest2);
 
                             if (!restResponse2.IsSuccessful)
-                                ConsoleWithLog($"Failed to set logo for {item.Name}.");
+                                ConsoleWithLog($"Failed to set logo for {item.Name}. Reason: {restResponse2.ErrorException.Message}");
                             else
                                 count++;
                         } 
