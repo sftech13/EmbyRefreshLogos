@@ -92,13 +92,13 @@ namespace EmbyRefreshLogos
                 {
                     Root? channelsData = JsonConvert.DeserializeObject<Root>(restResponse.Content);
 
-                    if(channelsData == null)
+                    if (channelsData == null)
                     {
                         ConsoleWithLog("EmbyRefreshLogos Error: No channels found.");
                         return;
                     }
 
-                    //using (StreamWriter file = File.CreateText(@"C:\Stuff\EmbyRefreshLogos\test\channelsData.json"))
+                    //using (StreamWriter file = File.CreateText(@"C:\Stuff\Repos\EmbyRefreshLogos\test\channelsData.json"))
                     //{
                     //    file.Write(JsonPrettify(restResponse.Content));
                     //}
@@ -141,8 +141,7 @@ namespace EmbyRefreshLogos
         /// <param name="fileName"></param>
         private void ReadM3u(string fileName)
         {
-            try
-            {
+
                 string pattern = @"\btvg-name=""([^""]+)"".tvg-logo=""([^""]+)"".group-title=""([^""]+)"",(.*?)\n*(https?\S+)";
                 string input = File.ReadAllText(fileName);
 
@@ -150,13 +149,16 @@ namespace EmbyRefreshLogos
                 {
                     string channelName = m.Groups[4].Value.TrimEnd('\r', '\n');
                     string logoUrl = m.Groups[2].Value;
+
+                try
+                {
                     channelData.Add(channelName, logoUrl);
                 }
-            }
-            catch (Exception ex)
-            {
-                ConsoleWithLog("Problem trying to read the m3u file. ");
-                ConsoleWithLog($"Exception: {ex.Message}");
+                catch (Exception ex)
+                {
+                    ConsoleWithLog("Non-fatal problem trying to read the m3u file. ");
+                    ConsoleWithLog($"Exception: {ex.Message}  Channel: {channelName}  LogoURL: {logoUrl}");
+                }
             }
         }
 
