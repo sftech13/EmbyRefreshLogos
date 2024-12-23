@@ -1,13 +1,23 @@
-EmbyRefreshLogos -  Application to force your Emby server to refresh its Live TV Guide Logos (Icons)
+EmbyClearLogos
+An application to remove Live TV Guide Logos (Icons) from your Emby server.
 
-EmbyRefreshLogos m3uPath API_KEY {server} {port}
-m3uPath - Mandatory full path to the m3u file you us for Emby.
-API_KEY - Mandatory Emby server API key. To get Emby api key go to dashboard>advanced>security and generate one
-server  - Optional Emby server IP address.  Not required if running on the Emby server machine.
-port    - Optional Emby server port.  Not required if the server is using the default 8096,
+Usage:
+    EmbyClearLogos API_KEY {server} {port}
 
-Example running on Emby server box with default port
-EmbyRefreshLogos C:\m3u\Emby.m3u api-key
+Parameters:
+    API_KEY  - (Mandatory) Emby server API key. To generate an API key, go to your Emby dashboard > advanced > security and generate one.
+    server   - (Optional) Emby server IP address. Default is `localhost` if not specified.
+    port     - (Optional) Emby server port. Default is `8096` if not specified.
 
-Example not running on Emby server box
-EmbyRefreshLogos C:\m3u\Emby.m3u api-key 192.168.50.50 8000
+Examples:
+Running on the Emby server with the default port:
+    EmbyClearLogos api-key
+
+Running from a remote machine:
+    EmbyClearLogos api-key {IP ADDRESS} {PORT}
+
+Description:
+    EmbyClearLogos connects to your Emby server and removes logos (icons) for all channels in the Live TV Guide.
+    
+    The application uses the Emby API and requires a valid API key for authentication.
+

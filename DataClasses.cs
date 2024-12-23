@@ -1,40 +1,31 @@
-﻿
-namespace EmbyRefreshLogos
+﻿namespace EmbyRefreshLogos
 {
-    public class m3uInfo
-    {      
-        public string channelName { get; set; }
-        public string logoUrl { get; set; }
-    }
-
     public class ImageTags
     {
-        public string Primary { get; set; }
+        public string Primary { get; set; } = string.Empty;
     }
 
     public class Item
     {
-        public string Name { get; set; }
-        public string ServerId { get; set; }
-        public string Id { get; set; }
-        public int SortIndexNumber { get; set; }
-        public string ChannelNumber { get; set; }
-        public string Type { get; set; }
-        public ImageTags ImageTags { get; set; }
-        public List<object> BackdropImageTags { get; set; }
-        public bool Disabled { get; set; }
-        public string ManagementId { get; set; }
-        public string ListingsProviderId { get; set; }
-        public string ListingsChannelId { get; set; }
-        public string ListingsPath { get; set; }
-        public string ListingsChannelName { get; set; }
-        public string ListingsChannelNumber { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string ServerId { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
+        public int SortIndexNumber { get; set; } = 0;
+        public string ChannelNumber { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public ImageTags ImageTags { get; set; } = new ImageTags();
+        public List<object> BackdropImageTags { get; set; } = new List<object>();
+        public bool Disabled { get; set; } = false;
+        public string ManagementId { get; set; } = string.Empty;
+        public string ListingsProviderId { get; set; } = string.Empty;
+        public string ListingsChannelId { get; set; } = string.Empty;
+        public string ListingsPath { get; set; } = string.Empty;
+        public string ListingsChannelName { get; set; } = string.Empty;
+        public string ListingsChannelNumber { get; set; } = string.Empty;
     }
 
     public class Root
     {
-        public List<Item> Items { get; set; }
+        public List<Item> Items { get; set; } = new List<Item>();
     }
-
-
 }

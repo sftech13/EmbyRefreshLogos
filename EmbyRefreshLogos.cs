@@ -1,196 +1,123 @@
 ﻿using Newtonsoft.Json;
 using RestSharp;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Net;
-using System.Text.RegularExpressions;
-
 
 namespace EmbyRefreshLogos
 {
-    public class EmbyRefreshLogos
+    public class EmbyClearLogos
     {
-        private const string format = "http://{0}:{1}/emby/LiveTv/Manage/Channels&api_key={2}";
-        private string agent = "EmbyRefreshLogos";
-
-        private Dictionary<string, string> channelData = new Dictionary<string, string>();
+        private const string ApiFormat = "http://{0}:{1}/emby/LiveTv/Manage/Channels?api_key={2}";
+        private const string Agent = "EmbyClearLogos";
 
         static void Main(string[] args)
         {
-            EmbyRefreshLogos p = new EmbyRefreshLogos();
-            p.RealMain(args);
+            var program = new EmbyClearLogos();
+            program.ClearLogos(args);
         }
 
-        private void RealMain(string[] args)
+        private void ClearLogos(string[] args)
         {
-            File.Delete("EmbyRefreshLogos.log");
+            const string logFile = "EmbyClearLogos.log";
+            File.Delete(logFile);
 
-            ConsoleWithLog($"EmbyRefreshLogos version {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}");
-            ConsoleWithLog("");
+            Log($"EmbyClearLogos version {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}");
+            Log("");
 
-            if (args.Length < 2)
+            if (args.Length < 1)
             {
-                ConsoleWithLog("EmbyRefreshLogos m3uPath API_KEY {server} {port}");
-                ConsoleWithLog("To get Emby api key go to dashboard>advanced>security and generate one");
+                Log("Usage: EmbyClearLogos API_KEY {server} {port}");
+                Log("To get Emby API key, go to dashboard > advanced > security and generate one.");
                 return;
             }
 
-            int count = 0;
-            string m3u = args[0];
-            string host = "localhost";
-            string port = "8096";
-            string key = args[1];
+            string apiKey = args[0];
+            string host = args.Length > 1 ? args[1] : "localhost";
+            string port = args.Length > 2 ? args[2] : "8096";
 
-            if (args.Length == 3)
-            {
-                host = args[2];
-            }
-            else if (args.Length == 4)
-            {
-                host = args[2];
-                port = args[3];
-            }
-            else if (args.Length != 2)
-            {
-                ConsoleWithLog("EmbyRefreshLogos m3uPath API_KEY {server} {port}");
-                ConsoleWithLog("To get Emby api key go to dashboard>advanced>security and generate one");
-                return;
-            }
+            Log($"Connecting to Emby server at {host}:{port}...");
 
-            ConsoleWithLog($"Reading m3u file {m3u}.");
-
-            if (!File.Exists(m3u))
-            {
-                ConsoleWithLog($"Specified m3u file {m3u} not found.");
-                ConsoleWithLog("EmbyRefreshLogos m3uPath API_KEY {server} {port}");
-                ConsoleWithLog("To get Emby api key go to dashboard>advanced>security and generate one");
-                return;
-            }
-
-            try
-            {
-                ReadM3u(m3u);
-            }
-            catch (Exception ex)
-            {
-                ConsoleWithLog($"Problem trying to read the m3u file {m3u}.");
-                ConsoleWithLog($"Exception: {ex.Message}");
-                return;
-            }
-
-            string uriName = string.Format(format, host, port, key);
-
+            string apiUrl = string.Format(ApiFormat, host, port, apiKey);
             try
             {
                 var restClient = new RestClient($"http://{host}:{port}");
-                RestRequest restRequest = new RestRequest($"emby/LiveTv/Manage/Channels?api_key={key}", Method.Get);
-                restRequest.AddHeader("user-agent", agent);
+                var restRequest = new RestRequest($"emby/LiveTv/Manage/Channels?api_key={apiKey}", Method.Get)
+                    .AddHeader("user-agent", Agent);
+
                 var restResponse = restClient.Execute(restRequest);
+
                 if (restResponse.StatusCode != HttpStatusCode.OK)
                 {
-                    ConsoleWithLog($"EmbyRefreshLogos Error Getting Emby Channels: {restResponse.StatusCode}  {restResponse.StatusDescription}");
+                    Log($"Error retrieving channels: {restResponse.StatusCode} {restResponse.StatusDescription}");
+                    return;
                 }
-                else
+
+                var channelsData = JsonConvert.DeserializeObject<ApiResponse>(restResponse.Content ?? string.Empty) 
+                                   ?? new ApiResponse();
+
+                if (channelsData.Items.Count == 0)
                 {
-                    Root? channelsData = JsonConvert.DeserializeObject<Root>(restResponse.Content);
+                    Log("No channels found.");
+                    return;
+                }
 
-                    if (channelsData == null)
+                int count = 0;
+
+                foreach (var channel in channelsData.Items)
+                {
+                    Log($"Deleting logo for channel: {channel.Name}");
+
+                    var deleteRequest = new RestRequest($"emby/Items/{channel.Id}/Images/Primary?api_key={apiKey}", Method.Delete)
+                        .AddHeader("user-agent", Agent);
+
+                    var deleteResponse = restClient.Execute(deleteRequest);
+
+                    if (!deleteResponse.IsSuccessful)
                     {
-                        ConsoleWithLog("EmbyRefreshLogos Error: No channels found.");
-                        return;
+                        Log($"Failed to delete logo for {channel.Name}. Error: {deleteResponse.ErrorMessage}");
                     }
-
-                    //using (StreamWriter file = File.CreateText(@"C:\Stuff\Repos\EmbyRefreshLogos\test\channelsData.json"))
-                    //{
-                    //    file.Write(JsonPrettify(restResponse.Content));
-                    //}
-
-                    foreach (Item item in channelsData.Items)
+                    else
                     {
-                        ConsoleWithLog($"Processing {item.Name} ...");
-                        string id = item.Id;
-                        bool found = channelData.TryGetValue(item.Name, out string? logoUrl);
-
-                        if (found && !string.IsNullOrEmpty(logoUrl))
-                        {
-                            RestRequest restRequest2 = new RestRequest($"emby/Items/{id}/Images/Primary/0/Url?Url={logoUrl}&api_key={key}", Method.Post);
-                            restRequest2.AddHeader("user-agent", agent);
-                            var restResponse2 = restClient.Execute(restRequest2);
-
-                            if (!restResponse2.IsSuccessful)
-                                ConsoleWithLog($"Failed to set logo for {item.Name}. Reason: {restResponse2.ErrorException.Message}");
-                            else
-                                count++;
-                        } 
-                        else 
-                        {
-                            ConsoleWithLog($"EmbyRefreshLogos: Could not find logo for {item.Name}.");
-                        }
+                        count++;
+                        Log($"Logo deleted for channel: {channel.Name}");
                     }
                 }
+
+                Log($"EmbyClearLogos completed. Total logos deleted: {count}");
             }
             catch (Exception ex)
             {
-                ConsoleWithLog($"EmbyRefreshLogos Exception: {ex.Message}.");
-            }
-
-            ConsoleWithLog($"EmbyRefreshLogos Complete. Number of logos set: {count}.");
-        }
-
-        /// <summary>
-        /// Read m3u file and store channel name and logo url in dictionary
-        /// </summary>
-        /// <param name="fileName"></param>
-        private void ReadM3u(string fileName)
-        {
-
-                string pattern = @"\btvg-name=""([^""]+)"".tvg-logo=""([^""]+)"".group-title=""([^""]+)"",(.*?)\n*(https?\S+)";
-                string input = File.ReadAllText(fileName);
-
-                foreach (Match m in Regex.Matches(input, pattern))
-                {
-                    string channelName = m.Groups[4].Value.TrimEnd('\r', '\n');
-                    string logoUrl = m.Groups[2].Value;
-
-                try
-                {
-                    channelData.Add(channelName, logoUrl);
-                }
-                catch (Exception ex)
-                {
-                    ConsoleWithLog("Non-fatal problem trying to read the m3u file. ");
-                    ConsoleWithLog($"Exception: {ex.Message}  Channel: {channelName}  LogoURL: {logoUrl}");
-                }
+                Log($"Exception occurred: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Writes to console and log file
+        /// Logs messages to the console and a log file.
         /// </summary>
         /// <param name="text"></param>
-        public static void ConsoleWithLog(string text)
+        private static void Log(string text)
         {
             Console.WriteLine(text);
-
-            using (StreamWriter file = File.AppendText("EmbyRefreshLogos.log"))
-            {
-                file.Write(text + Environment.NewLine);
-            }
+            File.AppendAllText("EmbyClearLogos.log", text + Environment.NewLine);
         }
+    }
 
-        /// <summary>
-        /// Indents and adds line breaks etc to make it pretty for printing/viewing
-        /// </summary>
-        /// <param name="json"></param>
-        /// <returns></returns>
-        public static string JsonPrettify(string json)
-        {
-            using (var stringReader = new StringReader(json))
-            using (var stringWriter = new StringWriter())
-            {
-                var jsonReader = new JsonTextReader(stringReader);
-                var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Newtonsoft.Json.Formatting.Indented };
-                jsonWriter.WriteToken(jsonReader);
-                return stringWriter.ToString();
-            }
-        }
+    /// <summary>
+    /// Represents the API response structure for channels.
+    /// </summary>
+    public class ApiResponse
+    {
+        public List<Channel> Items { get; set; } = new List<Channel>(); // Default empty list
+    }
+
+    /// <summary>
+    /// Represents a single channel in the API response.
+    /// </summary>
+    public class Channel
+    {
+        public string Id { get; set; } = string.Empty; // Default value
+        public string Name { get; set; } = string.Empty; // Default value
     }
 }
