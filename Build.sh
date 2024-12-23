@@ -38,19 +38,19 @@ dotnet publish "$PROJECT_PATH" -r linux-x64 -c Release \
 
 # Windows (win-x64)
 cp "$BIN_PATH/win-x64/publish/EmbyRefreshLogos.exe" "$BUILD_PATH/EmbyRefreshLogos.exe"
-$ZIP_TOOL a -tzip "$BUILD_PATH/EmbyRefreshLogos-WIN.zip" "$BUILD_PATH/EmbyRefreshLogos.exe" "$PROJECT_PATH/EmbyRefreshLogos.txt"
+$ZIP_TOOL a -tzip "$BUILD_PATH/EmbyRefreshLogos-WIN.zip" "$BUILD_PATH/EmbyRefreshLogos.exe" "$PROJECT_PATH/Doc/EmbyRefreshLogos.txt"
 
 # macOS (osx-x64)
 cp "$BIN_PATH/osx-x64/publish/EmbyRefreshLogos" "$BUILD_PATH/EmbyRefreshLogos"
-$ZIP_TOOL a -t7z "$BUILD_PATH/EmbyRefreshLogos-MAC.7z" "$BUILD_PATH/EmbyRefreshLogos" "$PROJECT_PATH/EmbyRefreshLogos.txt"
+$ZIP_TOOL a -t7z "$BUILD_PATH/EmbyRefreshLogos-MAC.7z" "$BUILD_PATH/EmbyRefreshLogos" "$PROJECT_PATH/Doc/EmbyRefreshLogos.txt"
 
 # Linux ARM (linux-arm)
 cp "$BIN_PATH/linux-arm/publish/EmbyRefreshLogos" "$BUILD_PATH/EmbyRefreshLogos"
-$ZIP_TOOL a -t7z "$BUILD_PATH/EmbyRefreshLogos-RasPi.7z" "$BUILD_PATH/EmbyRefreshLogos" "$PROJECT_PATH/EmbyRefreshLogos.txt"
+$ZIP_TOOL a -t7z "$BUILD_PATH/EmbyRefreshLogos-RasPi.7z" "$BUILD_PATH/EmbyRefreshLogos" "$PROJECT_PATH/Doc/EmbyRefreshLogos.txt"
 
 # Linux x64 (linux-x64)
 cp "$BIN_PATH/linux-x64/publish/EmbyRefreshLogos" "$BUILD_PATH/EmbyRefreshLogos"
-$ZIP_TOOL a -t7z "$BUILD_PATH/EmbyRefreshLogos-LIN64.7z" "$BUILD_PATH/EmbyRefreshLogos" "$PROJECT_PATH/EmbyRefreshLogos.txt"
+$ZIP_TOOL a -t7z "$BUILD_PATH/EmbyRefreshLogos-LIN64.7z" "$BUILD_PATH/EmbyRefreshLogos" "$PROJECT_PATH/Doc/EmbyRefreshLogos.txt"
 
 echo "Build and packaging complete. Files are located in $BUILD_PATH."
 

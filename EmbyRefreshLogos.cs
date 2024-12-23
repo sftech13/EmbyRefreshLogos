@@ -7,46 +7,49 @@ using System.Net;
 
 namespace EmbyRefreshLogos
 {
-    public class EmbyClearLogos
+    public class EmbyRefreshLogos
     {
-        private const string ApiFormat = "http://{0}:{1}/emby/LiveTv/Manage/Channels?api_key={2}";
-        private const string Agent = "EmbyClearLogos";
+        private const string ApiFormat = "http://{2}:{3}/emby/LiveTv/Manage/Channels?api_key={0}";
+        private const string GuideRefreshFormat = "http://{2}:{3}/emby/ScheduledTasks/Running/{1}?api_key={0}";
+        private const string Agent = "EmbyRefreshLogos";
 
         static void Main(string[] args)
         {
-            var program = new EmbyClearLogos();
+            var program = new EmbyRefreshLogos();
             program.ClearLogos(args);
         }
 
         private void ClearLogos(string[] args)
         {
-            const string logFile = "EmbyClearLogos.log";
+            const string logFile = "EmbyRefreshLogos.log";
             File.Delete(logFile);
 
-            Log($"EmbyClearLogos version {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}");
+            Log($"EmbyRefreshLogos version {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}");
             Log("");
 
-            if (args.Length < 1)
+            if (args.Length < 2)
             {
-                Log("Usage: EmbyClearLogos API_KEY {server} {port}");
+                Log("Usage: EmbyRefreshLogos API_KEY SCHEDULED_TASK_ID {server} {port}");
                 Log("To get Emby API key, go to dashboard > advanced > security and generate one.");
                 return;
             }
 
             string apiKey = args[0];
-            string host = args.Length > 1 ? args[1] : "localhost";
-            string port = args.Length > 2 ? args[2] : "8096";
+            string scheduledTaskId = args[1];
+            string host = args.Length > 2 ? args[2] : "localhost";
+            string port = args.Length > 3 ? args[3] : "8096";
 
             Log($"Connecting to Emby server at {host}:{port}...");
+            string apiUrl = string.Format(ApiFormat, apiKey, scheduledTaskId, host, port);
 
-            string apiUrl = string.Format(ApiFormat, host, port, apiKey);
             try
             {
-                var restClient = new RestClient($"http://{host}:{port}");
-                var restRequest = new RestRequest($"emby/LiveTv/Manage/Channels?api_key={apiKey}", Method.Get)
+                var restClient = new RestClient(new RestClientOptions($"http://{host}:{port}"));
+                var restRequest = new RestRequest($"emby/LiveTv/Manage/Channels?api_key={apiKey}")
                     .AddHeader("user-agent", Agent);
 
-                var restResponse = restClient.Execute(restRequest);
+                Log($"Fetching channels from: {apiUrl}");
+                var restResponse = restClient.Get(restRequest);
 
                 if (restResponse.StatusCode != HttpStatusCode.OK)
                 {
@@ -54,9 +57,10 @@ namespace EmbyRefreshLogos
                     return;
                 }
 
-                var channelsData = JsonConvert.DeserializeObject<ApiResponse>(restResponse.Content ?? string.Empty) 
+                var channelsData = JsonConvert.DeserializeObject<ApiResponse>(restResponse.Content ?? string.Empty)
                                    ?? new ApiResponse();
 
+                Log($"Channels retrieved: {channelsData.Items.Count}");
                 if (channelsData.Items.Count == 0)
                 {
                     Log("No channels found.");
@@ -69,10 +73,10 @@ namespace EmbyRefreshLogos
                 {
                     Log($"Deleting logo for channel: {channel.Name}");
 
-                    var deleteRequest = new RestRequest($"emby/Items/{channel.Id}/Images/Primary?api_key={apiKey}", Method.Delete)
+                    var deleteRequest = new RestRequest($"emby/Items/{channel.Id}/Images/Primary?api_key={apiKey}")
                         .AddHeader("user-agent", Agent);
 
-                    var deleteResponse = restClient.Execute(deleteRequest);
+                    var deleteResponse = restClient.Delete(deleteRequest);
 
                     if (!deleteResponse.IsSuccessful)
                     {
@@ -85,39 +89,62 @@ namespace EmbyRefreshLogos
                     }
                 }
 
-                Log($"EmbyClearLogos completed. Total logos deleted: {count}");
+                Log($"EmbyRefreshLogos completed. Total logos deleted: {count}");
             }
             catch (Exception ex)
             {
-                Log($"Exception occurred: {ex.Message}");
+                Log($"Exception occurred while deleting logos: {ex.Message}");
+            }
+
+            // Automatically refresh the guide
+            RefreshGuide(host, port, scheduledTaskId, apiKey);
+        }
+
+        private void RefreshGuide(string host, string port, string taskId, string apiKey)
+        {
+            string refreshUrl = string.Format(GuideRefreshFormat, apiKey, taskId, host, port);
+            Log($"Initiating Emby guide refresh using: {refreshUrl}");
+
+            try
+            {
+                var restClient = new RestClient(new RestClientOptions(refreshUrl));
+                var refreshRequest = new RestRequest()
+                    .AddHeader("user-agent", Agent);
+
+                var refreshResponse = restClient.Post(refreshRequest);
+
+                // Handle NoContent as a success response
+                if (refreshResponse.StatusCode == HttpStatusCode.OK || refreshResponse.StatusCode == HttpStatusCode.NoContent)
+                {
+                    Log("Emby guide refresh triggered successfully.");
+                }
+                else
+                {
+                    Log($"Failed to trigger Emby guide refresh: {refreshResponse.StatusCode} {refreshResponse.StatusDescription}");
+                    Log($"Response: {refreshResponse.Content}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Exception during guide refresh: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Logs messages to the console and a log file.
-        /// </summary>
-        /// <param name="text"></param>
         private static void Log(string text)
         {
             Console.WriteLine(text);
-            File.AppendAllText("EmbyClearLogos.log", text + Environment.NewLine);
+            File.AppendAllText("EmbyRefreshLogos.log", text + Environment.NewLine);
         }
     }
 
-    /// <summary>
-    /// Represents the API response structure for channels.
-    /// </summary>
     public class ApiResponse
     {
-        public List<Channel> Items { get; set; } = new List<Channel>(); // Default empty list
+        public List<Channel> Items { get; set; } = new List<Channel>();
     }
 
-    /// <summary>
-    /// Represents a single channel in the API response.
-    /// </summary>
     public class Channel
     {
-        public string Id { get; set; } = string.Empty; // Default value
-        public string Name { get; set; } = string.Empty; // Default value
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
     }
 }
